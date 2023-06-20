@@ -9,11 +9,12 @@ const GUILD_ID = process.env.GUILD_ID
 
 const axios = require('axios')
 const express = require('express');
+const bodyparser = require('body-parser')
 const { InteractionType, InteractionResponseType, verifyKeyMiddleware } = require('discord-interactions');
 
 
 const app = express();
-// app.use(bodyParser.json());
+app.use(bodyparser.text());
 
 const discord_api = axios.create({
   baseURL: 'https://discord.com/api/',
@@ -25,9 +26,6 @@ const discord_api = axios.create({
 	"Authorization": `Bot ${TOKEN}`
   }
 });
-
-
-
 
 app.post('/interactions', verifyKeyMiddleware(PUBLIC_KEY), async (req, res) => {
   const interaction = req.body;
@@ -70,8 +68,6 @@ app.post('/interactions', verifyKeyMiddleware(PUBLIC_KEY), async (req, res) => {
 
 });
 
-
-
 app.get('/register_commands', async (req,res) =>{
   let slash_commands = [
     {
@@ -106,8 +102,55 @@ app.get('/', async (req,res) =>{
   return res.send('Follow documentation ')
 })
 
+app.post('/post', async (request, response) => {
+	const res = undefined
+	try {
+	res = await discord_api.post(`/channels/528723021670776832/messages`,{
+          content:'Yo! I got your slash command. I am not able to respond to DMs just slash commands.',
+        })
+		response.send(res)
+	} catch(e) {
+	response.send(res)	
+	}
+})
+
+app.post('/checkMember', async (req, res) => {
+	let response = undefined
+	
+	try {
+		response = await discord_api.get(`/guilds/${GUILD_ID}/members/${req.body}`)
+		return res.send(response.data.user)
+	} catch(e) {
+		console.log(e)
+	}	
+})
+
+app.post('/checkMemberV2', async (req, res) => {
+	let response = undefined
+	
+	try {
+		const requestBody = req.body;
+		const [username] = requestBody.split(',');
+		response = await discord_api.get(`/guilds/${GUILD_ID}/members/search?query=${username}`)
+		return res.send(response.data)
+	} catch(e) {
+		console.log(e)
+	}	
+})
+
+app.get('/getMembers', async (req, res) => {
+let response = undefined
+	
+	try {
+		response = await discord_api.get(`/guilds/${GUILD_ID}/members?limit=10`)
+		console.log(response.data)
+		return res.send(response.data)
+	} catch(e) {
+		console.log(e)
+	}	
+})	
 
 app.listen(8999, () => {
-
+	
 })
 
